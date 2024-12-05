@@ -1,0 +1,20 @@
+# Django-specific
+.DS_Store
+*.pyc
+*.pyo
+__pycache__/
+.pytest_cache/
+.tox/
+venv/
+local.py
+db.sqlite3
+media/
+migrations/
+
+# General
+*.swp
+*~
+.DS_Store
+.idea
+.vscode
+*.pdf

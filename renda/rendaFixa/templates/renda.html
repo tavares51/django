@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center border-bottom">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1 class="h2"><i class="bi bi-clipboard2-data"></i><label>Renda Fixa</label></h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <form method="post" >
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="colFormLabelSm"
+                                    class="col-sm-6 col-form-label col-form-label-sm">Investimento
+                                    Incial</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">R$</div>
+                                    {{ form.investimento_inicial }}
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="colFormLabelSm"
+                                    class="col-sm-6 col-form-label col-form-label-sm">Taxa de Juros</label>
+                                <div class="input-group">
+                                    {{ form.taxa_juros }}
+                                    <div class="input-group-text">%</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="colFormLabelSm"
+                                    class="col-sm-6 col-form-label col-form-label-sm">Anos</label>
+                                <div class="input-group">
+                                    {{ form.anos }}
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="colFormLabelSm"
+                                    class="col-sm-6 col-form-label col-form-label-sm">Meta</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">R$</div>
+                                    {{ form.meta }}
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn btn-outline-secondary btn-block">Calcular</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% if resultado %}
+    <div class="mt-3 alert alert-info">
+        <h4 class="text-center">Resultado</h4>
+        <p>
+            Montante final: <strong>R$ {{ resultado.montante|floatformat:2 }}</strong>
+        </p>
+        <p>
+            Meta de <strong>R$ {{ resultado.meta|floatformat:2 }}</strong> foi 
+            <strong>
+                {% if resultado.meta_alcancada %}
+                    alcançada
+                {% else %}
+                    não alcançada
+                {% endif %}
+            </strong>.
+        </p>
+    </div>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <canvas id="valorPorAnoChart"></canvas>
+            </div>
+        </div>
+    </div>
+{% endif %}
+<script>
+    // Dados do gráfico
+    const labels = {{ labels_anoe }};
+    const data = {{ valores_anuais }};
+    const meta = {{ montante }};
+
+    // Configuração do Chart.js
+    const ctx = document.getElementById('valorPorAnoChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line', // Alterado para 'line' para melhor visualização da meta
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Valor (R$)',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: data.map(value => value === meta ? 'blue' : 'rgba(75, 192, 192, 1)'), // Destaca o ponto
+                    pointRadius: data.map(value => value === meta ? 8 : 5), // Aumenta o tamanho do ponto que atinge a meta
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                annotation: {
+                    annotations: {
+                        line1: {
+                            type: 'line',
+                            yMin: meta,
+                            yMax: meta,
+                            borderColor: 'red',
+                            borderWidth: 5,
+                            label: {
+                                content: `Meta: R$ ${meta.toLocaleString('pt-BR')}`,
+                                enabled: true,
+                                position: 'start',
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                color: 'black',
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    min: data[0],
+                    ticks: {
+                        callback: function (value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels],
+    });
+</script>
+{% endblock %}
